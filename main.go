@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
 
@@ -33,18 +34,30 @@ func main() {
 		panic(err)
 	}
 
+	networks := container.NetworkSettings.Networks
+
+	networkConfig := network.NetworkingConfig{
+		EndpointsConfig: networks,
+	}
+
+	// network, err := cli.NetworkInspect(ctx, networkID)
+
 	isRunning := container.State.Running || container.State.Paused
 	imageName := container.Config.Image
-
-	// if container is set to autoremove stopping it would completely remove it
-	if container.HostConfig.AutoRemove {
-		panic(fmt.Errorf("container %s is set to autoremove", container.Name))
-	}
 
 	if isRunning {
 		fmt.Println("Stopping container ...")
 
 		err = cli.ContainerStop(ctx, containerID, nil)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	if !container.HostConfig.AutoRemove {
+		fmt.Println("Removing container ...")
+
+		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{})
 		if err != nil {
 			panic(err)
 		}
@@ -60,10 +73,16 @@ func main() {
 		defer out.Close()
 	}
 
-	fmt.Println("Starting container ...")
-
-	err = cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{})
+	fmt.Println("Recreating container ...")
+	createdContainer, err := cli.ContainerCreate(ctx, container.Config, container.HostConfig, &networkConfig, container.Name)
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Println("Starting container ...")
+	err = cli.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{})
+	if err != nil {
+		panic(err)
+	}
+
 }
