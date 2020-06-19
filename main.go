@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	shortUpdateImgFlag = flag.Bool("u", false, "Update the image before recreating the container")
-	updateImgFlag      = flag.Bool("update", false, "Update the image before recreating the container")
+	shortPullImgFlag = flag.Bool("p", false, "Pull image before recreating the container")
+	pullImgFlag      = flag.Bool("pull", false, "Pull image before recreating the container")
 )
 
 func main() {
@@ -21,32 +21,23 @@ func main() {
 	ctx := context.Background()
 	containerID := flag.Arg(0)
 
-	// Combine results from full flag and short flag
-	shouldUpdateImageFlag := *shortUpdateImgFlag || *updateImgFlag
+	// combine results from full flag and short flag
+	shouldPullImageFlag := *shortPullImgFlag || *pullImgFlag
 
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		panic(err)
 	}
 
-	container, err := cli.ContainerInspect(ctx, containerID)
+	cnt, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
 		panic(err)
 	}
 
-	networks := container.NetworkSettings.Networks
+	if shouldPullImageFlag {
+		imageName := cnt.Config.Image
 
-	networkConfig := network.NetworkingConfig{
-		EndpointsConfig: networks,
-	}
-
-	// network, err := cli.NetworkInspect(ctx, networkID)
-
-	isRunning := container.State.Running || container.State.Paused
-	imageName := container.Config.Image
-
-	if shouldUpdateImageFlag {
-		fmt.Printf("Updating image %s ...\n", imageName)
+		fmt.Printf("Pulling image %s ...\n", imageName)
 		out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 		if err != nil {
 			panic(err)
@@ -55,7 +46,7 @@ func main() {
 		defer out.Close()
 	}
 
-	if isRunning {
+	if cnt.State.Running || cnt.State.Paused {
 		fmt.Printf("Stopping container %s ...\n", containerID)
 
 		err = cli.ContainerStop(ctx, containerID, nil)
@@ -64,7 +55,7 @@ func main() {
 		}
 	}
 
-	if !container.HostConfig.AutoRemove {
+	if !cnt.HostConfig.AutoRemove {
 		fmt.Printf("Removing container %s ...\n", containerID)
 
 		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{})
@@ -74,7 +65,14 @@ func main() {
 	}
 
 	fmt.Println("Recreating container ...")
-	createdContainer, err := cli.ContainerCreate(ctx, container.Config, container.HostConfig, &networkConfig, container.Name)
+	createdContainer, err := cli.ContainerCreate(
+		ctx,
+		cnt.Config,
+		cnt.HostConfig,
+		&network.NetworkingConfig{
+			EndpointsConfig: cnt.NetworkSettings.Networks,
+		},
+		cnt.Name)
 	if err != nil {
 		panic(err)
 	}
@@ -84,5 +82,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }
