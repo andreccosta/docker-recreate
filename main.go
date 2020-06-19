@@ -77,7 +77,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Starting container %s ...\n", createdContainer.ID)
+	fmt.Printf("Starting container %s ...\n", createdContainer.ID[:10])
 	err = cli.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{})
 	if err != nil {
 		panic(err)
