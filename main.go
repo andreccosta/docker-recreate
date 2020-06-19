@@ -29,13 +29,13 @@ func main() {
 		panic(err)
 	}
 
-	cnt, err := cli.ContainerInspect(ctx, containerID)
+	originalContainer, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
 		panic(err)
 	}
 
 	if shouldPullImageFlag {
-		imageName := cnt.Config.Image
+		imageName := originalContainer.Config.Image
 
 		fmt.Printf("Pulling image %s ...\n", imageName)
 		out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
@@ -46,7 +46,7 @@ func main() {
 		defer out.Close()
 	}
 
-	if cnt.State.Running || cnt.State.Paused {
+	if originalContainer.State.Running || originalContainer.State.Paused {
 		fmt.Printf("Stopping container %s ...\n", containerID)
 
 		err = cli.ContainerStop(ctx, containerID, nil)
@@ -55,7 +55,7 @@ func main() {
 		}
 	}
 
-	if !cnt.HostConfig.AutoRemove {
+	if !originalContainer.HostConfig.AutoRemove {
 		fmt.Printf("Removing container %s ...\n", containerID)
 
 		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{})
@@ -67,12 +67,12 @@ func main() {
 	fmt.Println("Recreating container ...")
 	createdContainer, err := cli.ContainerCreate(
 		ctx,
-		cnt.Config,
-		cnt.HostConfig,
+		originalContainer.Config,
+		originalContainer.HostConfig,
 		&network.NetworkingConfig{
-			EndpointsConfig: cnt.NetworkSettings.Networks,
+			EndpointsConfig: originalContainer.NetworkSettings.Networks,
 		},
-		cnt.Name)
+		originalContainer.Name)
 	if err != nil {
 		panic(err)
 	}
