@@ -7,9 +7,10 @@ GOGET=$(GO) get
 BUILDDIR=bin
 NAME=docker-recreate
 VERSION=$(shell cat VERSION.txt)
+GOOSARCHES = $(shell cat .goosarch)
 
 .PHONY: all
-all: test build
+all: deps test build
 
 .PHONY: build
 build:
@@ -37,9 +38,6 @@ define buildrelease
 GOOS=$(1) GOARCH=$(2) CGO_ENABLED=$(CGO_ENABLED) $(GOBUILD) \
 	 -o $(BUILDDIR)/$(NAME)-$(1)-$(2) -a .;
 endef
-
-# List the GOOS and GOARCH to build
-GOOSARCHES = $(shell cat .goosarch)
 
 .PHONY: release
 release: *.go VERSION.txt

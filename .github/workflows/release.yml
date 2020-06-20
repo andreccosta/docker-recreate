@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+    tags:
+      - v*
+
+jobs:
+  release:
+    name: make release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: make release
+        id: make_release
+        uses: docker://golang:latest
+        with:
+          args: make release
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: upload assets
+        id: upload_assets
+        uses: AButler/upload-release-assets@v2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          files: ./bin/*
