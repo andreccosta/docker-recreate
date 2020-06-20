@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
@@ -11,18 +12,20 @@ import (
 )
 
 var (
-	shortPullImgFlag = flag.Bool("p", false, "Pull image before recreating the container")
-	pullImgFlag      = flag.Bool("pull", false, "Pull image before recreating the container")
+	pullFlag = flag.Bool("pull", false, "Pull image before recreating the container")
 )
 
 func main() {
 	flag.Parse()
 
+	if flag.NArg() < 1 {
+		fmt.Print("no container id or name specified\n")
+		flag.Usage()
+		os.Exit(2)
+	}
+
 	ctx := context.Background()
 	containerID := flag.Arg(0)
-
-	// combine results from full flag and short flag
-	shouldPullImageFlag := *shortPullImgFlag || *pullImgFlag
 
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -34,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	if shouldPullImageFlag {
+	if *pullFlag {
 		imageName := originalContainer.Config.Image
 
 		fmt.Printf("Pulling image %s ...\n", imageName)
