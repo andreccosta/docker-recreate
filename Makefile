@@ -42,3 +42,8 @@ endef
 .PHONY: release
 release: *.go VERSION.txt
 	$(foreach GOOSARCH,$(GOOSARCHES), $(call buildrelease,$(subst /,,$(dir $(GOOSARCH))),$(notdir $(GOOSARCH))))
+
+.PHONY: tag
+tag: ## Create a new git tag to prepare to build a release.
+	git tag -sa $(VERSION) -m "$(VERSION)"
+	@echo "Run git push origin $(VERSION) to push your new tag to GitHub and trigger a release."
