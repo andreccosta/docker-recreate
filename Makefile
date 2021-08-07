@@ -16,6 +16,10 @@ all: deps test build
 build:
 	$(GOBUILD) -o bin/$(NAME) -v
 
+.PHONY: install
+install:
+	cp bin/$(NAME) ~/.docker/cli-plugins/
+
 .PHONY: test
 test:
 	$(GOTEST) -v ./...

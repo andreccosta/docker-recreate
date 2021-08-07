@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -9,23 +10,46 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-)
-
-var (
-	pullFlag = flag.Bool("pull", false, "Pull image before recreating the container")
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
 func main() {
-	flag.Parse()
-
-	if flag.NArg() < 1 {
+	if len(os.Args) < 2 {
 		fmt.Print("no container id or name specified\n")
-		flag.Usage()
-		os.Exit(2)
+		os.Exit(1)
 	}
 
+	var pluginMetadata = map[string]interface{}{
+		"SchemaVersion":    "0.1.0",
+		"Vendor":           "github.com/andreccosta",
+		"Version":          "0.1.2",
+		"ShortDescription": "Recreate containers",
+		"Experimental":     true,
+	}
+
+	recreateCmd := flag.NewFlagSet("", flag.ExitOnError)
+	pullFlag := recreateCmd.Bool("pull", false, "Pull image before recreating the container")
+
+	switch os.Args[1] {
+	case "docker-cli-plugin-metadata":
+		writer := json.NewEncoder(os.Stdout)
+		writer.Encode(pluginMetadata)
+	case "recreate":
+		if len(os.Args) < 3 {
+			fmt.Print("no container id or name specified\n")
+			os.Exit(1)
+		}
+
+		recreateCmd.Parse(os.Args[3:])
+		recreateContainer(os.Args[2], *pullFlag)
+	default:
+		recreateCmd.Parse(os.Args[2:])
+		recreateContainer(os.Args[1], *pullFlag)
+	}
+}
+
+func recreateContainer(containerID string, pullFlag bool) {
 	ctx := context.Background()
-	containerID := flag.Arg(0)
 
 	cli, err := client.NewEnvClient()
 	if err != nil {
@@ -37,7 +61,7 @@ func main() {
 		panic(err)
 	}
 
-	if *pullFlag {
+	if pullFlag {
 		imageName := originalContainer.Config.Image
 
 		fmt.Printf("Pulling image %s ...\n", imageName)
@@ -74,6 +98,9 @@ func main() {
 		originalContainer.HostConfig,
 		&network.NetworkingConfig{
 			EndpointsConfig: originalContainer.NetworkSettings.Networks,
+		},
+		&v1.Platform{
+			OS: originalContainer.Platform,
 		},
 		originalContainer.Name)
 	if err != nil {
