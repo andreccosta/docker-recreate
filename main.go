@@ -41,33 +41,42 @@ func main() {
 		}
 
 		recreateCmd.Parse(os.Args[3:])
-		recreateContainer(os.Args[2], *pullFlag)
+		err := recreateContainer(os.Args[2], *pullFlag)
+		if err != nil {
+			panic(err)
+		}
 	default:
 		recreateCmd.Parse(os.Args[2:])
-		recreateContainer(os.Args[1], *pullFlag)
+		err := recreateContainer(os.Args[1], *pullFlag)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
-func recreateContainer(containerID string, pullFlag bool) {
+func recreateContainer(containerID string, pullFlag bool) error {
 	ctx := context.Background()
 
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	originalContainer, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	if pullFlag {
-		imageName := originalContainer.Config.Image
+		image := originalContainer.Config.Image
+		platform := originalContainer.Platform
 
-		fmt.Printf("Pulling image %s ...\n", imageName)
-		out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+		fmt.Printf("Pulling image %s ...\n", image)
+		out, err := cli.ImagePull(ctx, image, types.ImagePullOptions{
+			Platform: platform,
+		})
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		defer out.Close()
@@ -78,7 +87,7 @@ func recreateContainer(containerID string, pullFlag bool) {
 
 		err = cli.ContainerStop(ctx, containerID, nil)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -87,7 +96,7 @@ func recreateContainer(containerID string, pullFlag bool) {
 
 		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{})
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
 
@@ -104,12 +113,14 @@ func recreateContainer(containerID string, pullFlag bool) {
 		},
 		originalContainer.Name)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Printf("Starting container %s ...\n", createdContainer.ID[:10])
 	err = cli.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{})
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }
