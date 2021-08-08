@@ -29,5 +29,5 @@ chmod +x ~/.docker/cli-plugins/docker-recreate
 ## Usage
 
 ```console
-docker recreate NAME [-pull]
+docker recreate [-pull] NAME
 ```

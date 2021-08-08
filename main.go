@@ -27,7 +27,7 @@ func main() {
 		"Experimental":     true,
 	}
 
-	recreateCmd := flag.NewFlagSet("", flag.ExitOnError)
+	recreateCmd := flag.NewFlagSet("recreate", flag.ExitOnError)
 	pullFlag := recreateCmd.Bool("pull", false, "Pull image before recreating the container")
 
 	switch os.Args[1] {
@@ -35,19 +35,30 @@ func main() {
 		writer := json.NewEncoder(os.Stdout)
 		writer.Encode(pluginMetadata)
 	case "recreate":
-		if len(os.Args) < 3 {
+		recreateCmd.Parse(os.Args[2:])
+		tail := recreateCmd.Args()
+
+		if len(tail) < 1 {
 			fmt.Print("no container id or name specified\n")
 			os.Exit(1)
 		}
-
-		recreateCmd.Parse(os.Args[3:])
-		err := recreateContainer(os.Args[2], *pullFlag)
+		
+		fmt.Println("tail:", recreateCmd.Args())
+		
+		err := recreateContainer(tail[0], *pullFlag)
 		if err != nil {
 			panic(err)
 		}
 	default:
-		recreateCmd.Parse(os.Args[2:])
-		err := recreateContainer(os.Args[1], *pullFlag)
+		recreateCmd.Parse(os.Args[1:])
+		tail := recreateCmd.Args()
+
+		if len(tail) < 1 {
+			fmt.Print("no container id or name specified\n")
+			os.Exit(1)
+		}
+		
+		err := recreateContainer(tail[0], *pullFlag)
 		if err != nil {
 			panic(err)
 		}
