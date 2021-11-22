@@ -10,7 +10,7 @@ require (
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.1
+	github.com/opencontainers/image-spec v1.0.2
 	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3 // indirect
 	golang.org/x/sys v0.0.0-20211102192858-4dd72447c267 // indirect
 	google.golang.org/genproto v0.0.0-20211102202547-e9cf271f7f2c // indirect
