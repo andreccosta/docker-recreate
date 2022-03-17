@@ -7,7 +7,7 @@ GOGET=$(GO) get
 BUILDDIR=bin
 NAME=docker-recreate
 VERSION=$(shell cat VERSION.txt)
-GOOSARCHES = $(shell cat .goosarch)
+GOOSARCHES=$(shell cat .goosarch)
 
 .PHONY: all
 all: deps test build
