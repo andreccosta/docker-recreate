@@ -11,8 +11,8 @@ jobs:
     name: make all
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
       - name: make build
-        uses: docker://golang:latest
-        with:
-          args: make all
+        run: make all
+        shell: bash
