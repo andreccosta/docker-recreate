@@ -50,4 +50,4 @@ release: *.go VERSION.txt
 .PHONY: tag
 tag: ## Create a new git tag to prepare to build a release.
 	git tag -a $(VERSION) -m "$(VERSION)"
-	@echo "Run git push origin $(VERSION) to push your new tag to GitHub and trigger a release."
+	@echo "Run \"git push origin $(VERSION)\" to push your new tag to GitHub and trigger a release."
