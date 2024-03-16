@@ -10,11 +10,10 @@ jobs:
     name: make release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
       - name: make release
         run: make release
-        shell: bash
       - name: create release
         id: create_release
         uses: softprops/action-gh-release@v1

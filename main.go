@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -42,9 +43,9 @@ func main() {
 			fmt.Print("no container id or name specified\n")
 			os.Exit(1)
 		}
-		
+
 		fmt.Println("tail:", recreateCmd.Args())
-		
+
 		err := recreateContainer(tail[0], *pullFlag)
 		if err != nil {
 			panic(err)
@@ -57,7 +58,7 @@ func main() {
 			fmt.Print("no container id or name specified\n")
 			os.Exit(1)
 		}
-		
+
 		err := recreateContainer(tail[0], *pullFlag)
 		if err != nil {
 			panic(err)
@@ -96,7 +97,7 @@ func recreateContainer(containerID string, pullFlag bool) error {
 	if originalContainer.State.Running || originalContainer.State.Paused {
 		fmt.Printf("Stopping container %s ...\n", containerID)
 
-		err = cli.ContainerStop(ctx, containerID, nil)
+		err = cli.ContainerStop(ctx, containerID, container.StopOptions{})
 		if err != nil {
 			return err
 		}

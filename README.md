@@ -1,10 +1,10 @@
 # Docker Recreate
 
-Docker CLI plugin for recreating docker containers while keeping their configuration (with updated image)
+Docker CLI plugin for recreating docker containers while keeping their configuration (but updating their image).
 
 ## Installation
 
-1. Download `docker-recreate` for your platform from the [releases]() page
+1. Download `docker-recreate` for your platform from the [latest release](https://github.com/andreccosta/docker-recreate/releases/lastest)
 1. Copy it to:
    - Windows: `c:\Users\<your user>\.docker\cli-plugins\docker-recreate.exe`
    - Mac and Linux: `$HOME/.docker/cli-plugins/docker-recreate`
