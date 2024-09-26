@@ -69,7 +69,7 @@ func main() {
 func recreateContainer(containerID string, pullFlag bool) error {
 	ctx := context.Background()
 
-	cli, err := client.NewClientWithOpts()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
 	}
