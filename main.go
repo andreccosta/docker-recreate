@@ -110,6 +110,14 @@ func recreateContainer(containerID string, pullFlag bool) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		waitCh, errCh := cli.ContainerWait(ctx, containerID, container.WaitConditionRemoved)
+
+		select {
+		case <-waitCh:
+		case err := <-errCh:
+			return err
+		}
 	}
 
 	fmt.Println("Recreating container ...")
