@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
@@ -80,11 +80,11 @@ func recreateContainer(containerID string, pullFlag bool) error {
 	}
 
 	if pullFlag {
-		image := originalContainer.Config.Image
+		img := originalContainer.Config.Image
 		platform := originalContainer.Platform
 
-		fmt.Printf("Pulling image %s ...\n", image)
-		out, err := cli.ImagePull(ctx, image, types.ImagePullOptions{
+		fmt.Printf("Pulling image %s ...\n", img)
+		out, err := cli.ImagePull(ctx, img, image.PullOptions{
 			Platform: platform,
 		})
 		if err != nil {
@@ -106,7 +106,7 @@ func recreateContainer(containerID string, pullFlag bool) error {
 	if !originalContainer.HostConfig.AutoRemove {
 		fmt.Printf("Removing container %s ...\n", containerID)
 
-		err = cli.ContainerRemove(ctx, containerID, types.ContainerRemoveOptions{})
+		err = cli.ContainerRemove(ctx, containerID, container.RemoveOptions{})
 		if err != nil {
 			return err
 		}
@@ -129,7 +129,7 @@ func recreateContainer(containerID string, pullFlag bool) error {
 	}
 
 	fmt.Printf("Starting container %s ...\n", createdContainer.ID[:10])
-	err = cli.ContainerStart(ctx, createdContainer.ID, types.ContainerStartOptions{})
+	err = cli.ContainerStart(ctx, createdContainer.ID, container.StartOptions{})
 	if err != nil {
 		return err
 	}
