@@ -4,7 +4,7 @@ Docker CLI plugin for recreating docker containers while keeping their configura
 
 ## Installation
 
-1. Download `docker-recreate` for your platform from the [latest release](https://github.com/andreccosta/docker-recreate/releases/lastest)
+1. Download `docker-recreate` for your platform from the [latest release](https://github.com/andreccosta/docker-recreate/releases/latest)
 1. Copy it to:
    - Windows: `c:\Users\<your user>\.docker\cli-plugins\docker-recreate.exe`
    - Mac and Linux: `$HOME/.docker/cli-plugins/docker-recreate`
@@ -29,5 +29,11 @@ chmod +x ~/.docker/cli-plugins/docker-recreate
 ## Usage
 
 ```console
-docker recreate [-pull] NAME
+docker recreate [--pull] NAME
+```
+
+You can also invoke the binary directly:
+
+```console
+docker-recreate [--pull] NAME
 ```
