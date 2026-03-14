@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.24.2
 
 require (
-	github.com/docker/docker v28.5.1+incompatible
+	github.com/docker/docker v28.5.2+incompatible
 	github.com/opencontainers/image-spec v1.1.1
 )
 
