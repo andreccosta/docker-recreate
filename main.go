@@ -19,6 +19,8 @@ import (
 
 var version = "dev"
 
+var errHelp = errors.New("help requested")
+
 type dockerClient interface {
 	ContainerInspect(ctx context.Context, containerID string) (container.InspectResponse, error)
 	ImageInspect(ctx context.Context, imageID string, inspectOpts ...client.ImageInspectOption) (image.InspectResponse, error)
@@ -36,6 +38,10 @@ func main() {
 
 func run(args []string, stdout io.Writer, stderr io.Writer, newClient func() (dockerClient, error)) int {
 	if err := runCommand(args, stdout, newClient); err != nil {
+		if errors.Is(err, errHelp) {
+			return 0
+		}
+
 		fmt.Fprintln(stderr, err)
 		return 1
 	}
@@ -70,6 +76,12 @@ func runCommand(args []string, stdout io.Writer, newClient func() (dockerClient,
 	pullFlag := recreateCmd.Bool("pull", false, "Pull image before recreating the container")
 
 	if err := recreateCmd.Parse(targetArgs); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			recreateCmd.SetOutput(stdout)
+			recreateCmd.Usage()
+			return errHelp
+		}
+
 		return fmt.Errorf("parse arguments: %w", err)
 	}
 
@@ -136,7 +148,7 @@ func recreateContainer(ctx context.Context, cli dockerClient, stdout io.Writer, 
 		select {
 		case waitResp := <-waitCh:
 			if waitResp.Error != nil {
-				return errors.New(waitResp.Error.Message)
+				return fmt.Errorf("wait for container %s removal: %s", containerID, waitResp.Error.Message)
 			}
 		case err := <-errCh:
 			if err != nil {

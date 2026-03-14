@@ -5,7 +5,7 @@ GOCLEAN=$(GO) clean
 GOTEST=$(GO) test
 BUILDDIR=bin
 NAME=docker-recreate
-VERSION=$(shell cat VERSION.txt)
+VERSION=$(strip $(shell head -n 1 VERSION.txt))
 GOOSARCHES=$(shell cat .goosarch)
 LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 

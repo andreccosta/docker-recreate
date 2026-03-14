@@ -74,6 +74,28 @@ func TestRunRequiresContainerName(t *testing.T) {
 	}
 }
 
+func TestRunHelpPrintsUsageAndSucceeds(t *testing.T) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	exitCode := run([]string{"--help"}, &stdout, &stderr, func() (dockerClient, error) {
+		t.Fatal("docker client should not be created for help")
+		return nil, nil
+	})
+
+	if exitCode != 0 {
+		t.Fatalf("expected exit code 0, got %d", exitCode)
+	}
+
+	if stderr.Len() != 0 {
+		t.Fatalf("expected empty stderr, got %q", stderr.String())
+	}
+
+	if !strings.Contains(stdout.String(), "Usage of recreate:") {
+		t.Fatalf("expected usage output, got %q", stdout.String())
+	}
+}
+
 func TestRunDirectInvocationRecreatesContainer(t *testing.T) {
 	client := &fakeDockerClient{
 		inspectResponse: container.InspectResponse{
@@ -207,6 +229,36 @@ func TestRecreateContainerWaitsForAutoRemoveContainer(t *testing.T) {
 	}
 	if client.removedContainerID != "" {
 		t.Fatalf("did not expect explicit remove, got %q", client.removedContainerID)
+	}
+}
+
+func TestRecreateContainerWaitErrorIncludesContext(t *testing.T) {
+	waitCh := make(chan container.WaitResponse, 1)
+	errCh := make(chan error)
+	waitCh <- container.WaitResponse{Error: &container.WaitExitError{Message: "remove failed"}}
+
+	client := &fakeDockerClient{
+		inspectResponse: container.InspectResponse{
+			ContainerJSONBase: &container.ContainerJSONBase{
+				Image:      "sha256:test",
+				Name:       "/demo",
+				State:      &container.State{Running: true},
+				HostConfig: &container.HostConfig{AutoRemove: true},
+			},
+			Config: &container.Config{Image: "repo/demo:latest"},
+		},
+		imageInspectResponse: image.InspectResponse{Os: "linux", Architecture: "amd64"},
+		waitCh:               waitCh,
+		errCh:                errCh,
+	}
+
+	err := recreateContainer(context.Background(), client, io.Discard, "demo", false)
+	if err == nil {
+		t.Fatal("expected wait error")
+	}
+
+	if got := err.Error(); got != "wait for container demo removal: remove failed" {
+		t.Fatalf("unexpected error: %q", got)
 	}
 }
 
