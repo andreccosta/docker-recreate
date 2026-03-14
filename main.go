@@ -179,7 +179,7 @@ func recreateContainer(ctx context.Context, cli dockerClient, stdout io.Writer, 
 		return fmt.Errorf("create replacement container for %s: %w", containerID, err)
 	}
 
-	fmt.Fprintf(stdout, "Starting container %s ...\n", createdContainer.ID[:10])
+	fmt.Fprintf(stdout, "Starting container %s ...\n", shortContainerID(createdContainer.ID))
 	if err := cli.ContainerStart(ctx, createdContainer.ID, container.StartOptions{}); err != nil {
 		return fmt.Errorf("start container %s: %w", createdContainer.ID, err)
 	}
@@ -227,6 +227,14 @@ func formatPlatform(platform *v1.Platform) string {
 
 func normalizeContainerName(name string) string {
 	return strings.TrimPrefix(name, "/")
+}
+
+func shortContainerID(id string) string {
+	if len(id) <= 10 {
+		return id
+	}
+
+	return id[:10]
 }
 
 func recreateNetworkingConfig(settings *container.NetworkSettings) *network.NetworkingConfig {

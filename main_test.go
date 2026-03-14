@@ -274,6 +274,16 @@ func TestResolvePlatformReturnsImageInspectError(t *testing.T) {
 	}
 }
 
+func TestShortContainerIDHandlesShortValues(t *testing.T) {
+	if got := shortContainerID("abc123"); got != "abc123" {
+		t.Fatalf("expected unchanged short id, got %q", got)
+	}
+
+	if got := shortContainerID("1234567890abcdef"); got != "1234567890" {
+		t.Fatalf("expected truncated id, got %q", got)
+	}
+}
+
 type fakeDockerClient struct {
 	inspectResponse      container.InspectResponse
 	inspectErr           error
