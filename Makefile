@@ -3,18 +3,18 @@ GO=go
 GOBUILD=$(GO) build
 GOCLEAN=$(GO) clean
 GOTEST=$(GO) test
-GOGET=$(GO) get
 BUILDDIR=bin
 NAME=docker-recreate
 VERSION=$(shell cat VERSION.txt)
 GOOSARCHES=$(shell cat .goosarch)
+LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 
 .PHONY: all
 all: deps test build
 
 .PHONY: build
 build:
-	$(GOBUILD) -o bin/$(NAME) -v
+	$(GOBUILD) $(LDFLAGS) -o bin/$(NAME) -v
 
 .PHONY: install
 install:
@@ -31,16 +31,16 @@ clean:
 
 .PHONY: run
 run:
-	$(GOBUILD) -o $(BUILDDIR)/$(NAME) -v ./...
+	$(GOBUILD) $(LDFLAGS) -o $(BUILDDIR)/$(NAME) -v ./...
 	./$(BUILDDIR)/$(NAME)
 
 .PHONY: deps
 deps:
-	$(GOGET) -v -t -d ./...
+	$(GO) mod download
 
 define buildrelease
 GOOS=$(1) GOARCH=$(2) CGO_ENABLED=$(CGO_ENABLED) $(GOBUILD) \
-	 -o $(BUILDDIR)/$(NAME)-$(1)-$(2) -a .;
+	 $(LDFLAGS) -o $(BUILDDIR)/$(NAME)-$(1)-$(2) -a .;
 endef
 
 .PHONY: release
