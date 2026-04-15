@@ -12,6 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
       - name: make release
         run: make release
       - name: create release
