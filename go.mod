@@ -1,8 +1,6 @@
 module github.com/andreccosta/docker-recreate
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.26
 
 require (
 	github.com/docker/docker v28.5.2+incompatible
